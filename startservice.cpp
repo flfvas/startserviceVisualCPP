@@ -1,15 +1,15 @@
 ﻿#include <windows.h>
 #include <iostream>
 
-// 强制链接器使用控制台子系统，解决 WinMain 符号未定义问题
+// 强制链接器使用控制台子系统
 #pragma comment(linker, "/subsystem:console")
 
 /*===========================
-模块：Print Spooler 服务控制模块
-功能：检查并启动系统的打印机后台处理程序
+模块：Virtual Disk 服务控制模块
+功能：检查并启动系统的虚拟磁盘服务 (vds)
 ===========================*/
 
-bool StartPrintSpooler()
+bool StartVirtualDiskService()
 {
     SC_HANDLE hSCM = NULL;
     SC_HANDLE hService = NULL;
@@ -24,15 +24,15 @@ bool StartPrintSpooler()
         return false;
     }
 
-    // 2. 打开 Print Spooler 服务 (服务名为 "Spooler")
-    hService = OpenService(hSCM, L"Spooler", SERVICE_START | SERVICE_QUERY_STATUS);
+    // 2. 打开 Virtual Disk 服务 (服务名为 "vds")
+    hService = OpenService(hSCM, L"vds", SERVICE_START | SERVICE_QUERY_STATUS);
     if (NULL == hService)
     {
         CloseServiceHandle(hSCM);
         return false;
     }
 
-    // 3. 检查服务状态，如果已经运行则无需启动
+    // 3. 检查服务状态
     if (QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE)&ssStatus, sizeof(SERVICE_STATUS_PROCESS), &dwBytesNeeded))
     {
         if (ssStatus.dwCurrentState == SERVICE_RUNNING || ssStatus.dwCurrentState == SERVICE_START_PENDING)
@@ -64,13 +64,13 @@ bool StartPrintSpooler()
 
 int main()
 {
-    if (StartPrintSpooler())
+    if (StartVirtualDiskService())
     {
-        std::cout << "Print Spooler 服务启动成功或已在运行。" << std::endl;
+        std::cout << "Virtual Disk 服务启动成功或已在运行。" << std::endl;
     }
     else
     {
-        std::cerr << "启动失败。请检查是否具有管理员权限。" << std::endl;
+        std::cerr << "启动失败。请确保以管理员身份运行程序。" << std::endl;
     }
     return 0;
 }
